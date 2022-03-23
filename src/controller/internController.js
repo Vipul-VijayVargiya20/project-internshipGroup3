@@ -1,88 +1,60 @@
 const internmodel=require("../model/internModel")
 const collegemodel=require("../model/collegeModel")
-const validateBody = require('../validation/validation');
+const validator = require('../validation/validation');
 
 
 const createIntern = async function (req, res) {
+  
     try {
-        const { name, email, mobile, collegeid, isDeleted } = req.body; 
-        const requestBody = req.body;
+         let data = req.body
+         if (Object.keys(data) == 0){return res.status(400).send({ status: false, msg: "Bad request, No data provided." })};
 
-        // Validate body
-        if (!validateBody.isValidRequestBody(requestBody)) {
-            return res.status(400).send({ status: false, msg: "Please provide body of intern" });
-        }
+         const{ name, email, mobile, collegeId, isDeleted} = data
 
-        // Validate name
-        if (!validateBody.isValid(name)) {
-            return res.status(400).send({ status: false, msg: "Please provide name" });
-        }
+         // For name required true:
+         if (!validator.isValid(name)){ return res.status(400).send({ status: false, msg: "Intern name is required" }) }
 
-        
+         // For email required true:
+         if (!validator.isValid(email)){ return res.status(400).send({ status: false, msg: "email is required" })}
 
-        // Validate email
-        if (!validateBody.isValid(email)) {
-            return res.status(400).send({ status: false, msg: "Please provide Email id" });;
-        }
+         // For a valid email:
+         if (!(/^\w+([\.-]?\w+)@\w+([\. -]?\w+)(\.\w{2,3})+$/.test(data.email))){
+              return res.status(400).send({ status:false, msg: 'Not a valid email'})
+         }
 
-        // Validate syntax of Email
-        if (!validateBody.isValidSyntaxOfEmail(email)) {
-            return res.status(404).send({ status: false, msg: "Please provide a valid Email Id" });
-        }
+         // For email unique true:
+         let duplicateEmail  = await internmodel.findOne({email:data.email})
+         if(duplicateEmail){return res.status(400).send({ status:false, msg: "email already exists"})}
 
-         // Validate mobile
-         if (!validateBody.isValid(mobile)) {
-            return res.status(400).send({ status: false, msg: "Please provide mobile number" });
-        }
+         // For Mobile No. required true:
+         if (!validator.isValid(mobile)){ return res.status(400).send({ status: false, msg: "Mobile No. is required" })}
 
-        // Validate mobile number
-        if (!validateBody.isValidMobileNum(mobile)) {
-            return res.status(400).send({ status: false, msg: 'Please provide a valid Mobile number.' })
-        }
+         // For a valid Mobile No.:
+         if (!(/^([+]\d{2})?\d{10}$/.test(data.mobile))){
+              return res.status(400).send({ status:false, msg: 'Not a valid mobile number'})
+         }
 
-        // Checking duplicate entry of intern
-        let isDBexists = await internmodel.find();
-        let dbLen = isDBexists.length
-        if (dbLen != 0) {
-            //Cheking the provided email id is already exists or not in the database
-            const DuplicateEmailId = await internmodel.find({ email: email });
-            const emailFound = DuplicateEmailId.length;
-            if (emailFound != 0) {
-                return res.status(400).send({ status: false, msg: "This Email Id already exists" });
-            }
-            const duplicateMob = await internmodel.findOne({ mobile: mobile })
-            // const duplicateMobCount = duplicateMob.length
-            if (duplicateMob) {
-                return res.status(400).send({ status: false, msg: "This mobile number already exists" });
-            }
-        }
-        // Cheking the email id is duplicate or not       
-        if (isDeleted === true) {
-            return res.status(400).send({ status: false, msg: "At the time of new entry no data should be deleted" });
-        }
-        
+         // For Mobile No. unique true:
+         let duplicateMobile  = await internmodel.findOne({mobile:data.mobile})
+         if(duplicateMobile){return res.status(400).send({ status:false, msg: "Mobile number already exists"})}
 
-        // Finally the registration of intern is successful
-        let collegeId = req.body.collegeId
-        let college = await collegemodel.findById(collegeId)
-        if(!college){
-           res.status(400).send({status : false, msg:"No Such college is Present,Please check collegeId"})}
-        
-        let internCreated = await internmodel.create(requestBody)
-        res.status(201).send({ status: true, data: internCreated })
+         // Checking college id :
+         let id = req.body.collegeId
+         if(!id){ return res.status(404).send({status:false, msg:"Collegeid should be in the body."})}
+
+         // Finding college according to college Id :
+         let idMatch = await collegemodel.findById(id)
+         if (!idMatch){return res.status(404).send({ status: false, msg: "No such college present in the database" })}
+
+         // Creating Intern :
+         const createIntern = await internmodel.create(data);
+         res.status(201).send({ status: true, message: "Intern is enrolled successfully", data: createIntern })
    }
-   catch (err) {
-    console.log("This is the error :", err.message)
-    res.status(500).send({ msg: "Error", error: err.message })
-}
-}
 
- 
-
-
-
-
-
+   catch (error) {
+        res.status(500).send({ status: false, msg: error.message })
+   }
+ };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const getCollegeDetails = async function (req, res) {
 
@@ -115,11 +87,14 @@ const getCollegeDetails = async function (req, res) {
               email: internDetails[i].email,
               mobile: internDetails[i].mobile
             }
+            
             interns.push(result)
           }
+          
           collegeData["intrests"] = interns
+          let x = interns.length
           console.log(collegeData)
-          res.status(200).send({ status: true, data: collegeData })
+          res.status(200).send({ status: true,total:x, data: collegeData })
         }
         catch (error) {
           console.log(error)
