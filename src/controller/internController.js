@@ -33,6 +33,18 @@ const createIntern = async function (req, res) {
          if (!(/^([+]\d{2})?\d{10}$/.test(data.mobile))){
               return res.status(400).send({ status:false, msg: 'Not a valid mobile number'})
          }
+        function checkIndianNumber(b)   
+       {  
+       var a = /^[6-9]\d{9}$/gi;  
+        if (a.test(b))   
+        {  
+            return true;  
+                }   
+              else   
+            {  
+              return false; 
+             }  
+              };
 
          // For Mobile No. unique true:
          let duplicateMobile  = await internmodel.findOne({mobile:data.mobile})
