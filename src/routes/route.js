@@ -7,7 +7,7 @@ const InternController=require("../controller/internController")
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-router.post("/functionup/colleges",CollegeController.createColleges )
+router.post("/functionup/colleges",CollegeController.createCollege )
 
 router.post("/functionup/interns", InternController.createIntern)
 

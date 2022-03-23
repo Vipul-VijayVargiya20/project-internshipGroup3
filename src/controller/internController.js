@@ -48,7 +48,7 @@ const createIntern = async function (req, res) {
 
          // Creating Intern :
          const createIntern = await internmodel.create(data);
-         res.status(201).send({ status: true, message: "Intern is enrolled successfully", data: createIntern })
+         res.status(201).send({ status: true, message: "Intern is  successfully created", data: createIntern })
    }
 
    catch (error) {
@@ -61,7 +61,7 @@ const getCollegeDetails = async function (req, res) {
         try {
           let interns = []
           let result = {}
-          let collegeName = req.query.name
+          let collegeName = req.query.collegename
       
           if (!collegeName)
             return res.status(400).send({ status: false, msg: "invalid request parameters . Please Provide college name" })
@@ -91,7 +91,7 @@ const getCollegeDetails = async function (req, res) {
             interns.push(result)
           }
           
-          collegeData["intrests"] = interns
+          collegeData["interns"] = interns
           let x = interns.length
           console.log(collegeData)
           res.status(200).send({ status: true,total:x, data: collegeData })
